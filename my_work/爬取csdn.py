@@ -1,11 +1,4 @@
-#!/usr/bin/env python
-# coding=utf-8
-#########################################
-	#> File Name: CSDN_article.py
-	#> Author: nealgavin
-	#> Mail: nealgavin@126.com 
-	#> Created Time: Tue 27 May 2014 03:42:54 PM CST
-#########################################
+# 此文件用于爬取csdn博客文章，为初期数据集收集时的尝试
 
 import random
 import socket
