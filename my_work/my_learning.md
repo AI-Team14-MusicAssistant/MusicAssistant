@@ -29,6 +29,7 @@
   - [ ] 1' 自我认知测试（课堂展示）
   - [ ] 3' 报告完成度逻辑清晰（报告）
   - [ ] 6' 课堂展示 （自测0.5*6，交叉测试1*3）
+  
 1. 准备`.jsonl`格式的数据集⽂件
    - 自我认知数据集，仿照`./dataset/lora_identify.jsonl`
    - 任务类数据集，仿照`./dataset/lora_medical.jsonl`
@@ -52,7 +53,7 @@
 # 我的训练过程：
 - 原模型演示： `python eval_model.py --load 1 --model_mode 2`
 
-- 训练模型：在`minimind/trainer`目录下使用``python train_lora.py --lora_name lora_music --data_path ../dataset/music_train_for_lora.jsonl --epochs 20`命令
+- 训练模型：在`minimind/trainer`目录下执行``python train_lora.py --lora_name lora_music --data_path ../dataset/music_train_for_lora.jsonl --epochs 20`命令
 
   （这里的命令是以训练猫娘模型为例）
 
@@ -62,9 +63,9 @@
 
   （这里不知道为什么测试时必须把`--model_mode`参数指定为2）
 
-  （这里以猫娘cat模型为示例。总的来说，如果要测试`minimind/out/lora/`目录下的某个模型如`lora_cat_512.pth`那么在填`--lora_name`参数时就只填“_512.pth”前面的部分）
+  （这里以猫娘cat模型为示例。总的来说，如果要测试`minimind/out/lora/`目录下的某个模型（如`lora_cat_512.pth`），那么在填`--lora_name`参数时就只填“_512.pth”前面的部分，即`lora_cat`）
 
-- 训练后无法保存.pth文件，故更改`train_lora.py`中的138行`--save_interval`的默认参数。原为100，改为20。（后来觉得20太小了，但暂未改回）
+- 初版文件在训练后无法保存.pth文件，故更改`train_lora.py`中的138行`--save_interval`的默认参数。原为100，改为20。（后来觉得20太小了，但暂未改回）
 ---
 
 - 训练和测试`lora_music_512.pth`
@@ -106,7 +107,7 @@
   - 转换后的数据集为`music_data2.jsonl`
 ---
 - 训练和测试`lora_music2_512.pth`
-  - 训练过程中，在epoch为15-20间，发现loss在约1.74~2.45间振荡。最后在loss为2.435时训练结束保存了模型（这里存疑）
+  - 训练过程中，在epoch为15-20间时，发现loss在约1.74~2.45间振荡。最后在loss为2.435时训练结束保存了模型（这里存疑）
   
     训练结束前的最后一次输出为`Epoch:[20/20](100/158) loss:2.435 lr:0.000010083100 epoch_Time:0.0min:`
     
