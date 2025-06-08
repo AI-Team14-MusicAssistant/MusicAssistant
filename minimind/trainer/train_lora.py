@@ -21,7 +21,7 @@ from model.model_lora import load_lora, save_lora, apply_lora
 warnings.filterwarnings('ignore')
 
 
-# Logger function
+# 日志打印函数
 def Logger(content):
     if not ddp or dist.get_rank() == 0:
         print(content)

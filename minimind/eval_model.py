@@ -93,6 +93,10 @@ def get_prompt_datas(args):
                 'lora_music2':[
                     '你是谁',
                     '你是由谁创造的',
+                ],
+                'lora_music3':[
+                    '你是谁',
+                    '你是由谁创造的',
                 ]
 
             }
