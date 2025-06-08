@@ -26,7 +26,7 @@ def Logger(content):
     if not ddp or dist.get_rank() == 0:
         print(content)
 
-
+# 学习率调度函数
 def get_lr(current_step, total_steps, lr):
     return lr / 10 + 0.5 * lr * (1 + math.cos(math.pi * current_step / total_steps))
 
@@ -35,14 +35,19 @@ def get_lr(current_step, total_steps, lr):
 def train_epoch(epoch, wandb):
     loss_fct = nn.CrossEntropyLoss(reduction='none')
     start_time = time.time()
+    
+    # 训练主循环
     for step, (X, Y, loss_mask) in enumerate(train_loader):
         X = X.to(args.device)
         Y = Y.to(args.device)
         loss_mask = loss_mask.to(args.device)
-        lr = get_lr(epoch * iter_per_epoch + step, args.epochs * iter_per_epoch, args.learning_rate)
+
+        # 更新学习率
+        lr = get_lr(epoch * iter_per_epoch + step, args.epochs * iter_per_epoch, args. learning_rate) 
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
+        # 前向传播、计算损失
         with ctx:
             res = model(X)
             loss = loss_fct(
@@ -55,6 +60,7 @@ def train_epoch(epoch, wandb):
 
         scaler.scale(loss).backward()
 
+        # 反向传播、梯度更新
         if (step + 1) % args.accumulation_steps == 0:
             scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(lora_params, args.grad_clip)
@@ -64,10 +70,11 @@ def train_epoch(epoch, wandb):
 
             optimizer.zero_grad(set_to_none=True)
 
+        # 日志记录
         if step % args.log_interval == 0:
             spend_time = time.time() - start_time
             Logger(
-                'Epoch:[{}/{}]({}/{}) loss:{:.3f} lr:{:.12f} epoch_Time:{}min:'.format(
+                'Epoch:[{}/{}]({}/{}) loss:{:.3f} learn_rate:{:.12f} epoch_Time:{}min:'.format(
                     epoch + 1,
                     args.epochs,
                     step,
@@ -75,17 +82,18 @@ def train_epoch(epoch, wandb):
                     loss.item() * args.accumulation_steps,
                     optimizer.param_groups[-1]['lr'],
                     spend_time / (step + 1) * iter_per_epoch // 60 - spend_time // 60))
-
+            # 如果启用了wandb，记录相同信息
             if (wandb is not None) and (not ddp or dist.get_rank() == 0):
                 wandb.log({"loss": loss * args.accumulation_steps,
                            "lr": optimizer.param_groups[-1]['lr'],
                            "epoch_Time": spend_time / (step + 1) * iter_per_epoch // 60 - spend_time // 60})
 
+        # 定期保存lora权重
         if (step + 1) % args.save_interval == 0 and (not ddp or dist.get_rank() == 0):
             model.eval()
             lora_save_path = f'{args.save_dir}/lora/{args.lora_name}_{lm_config.hidden_size}.pth'
             os.makedirs(os.path.dirname(lora_save_path), exist_ok=True)
-            # 【区别1】只保存lora权重即可
+            
             save_lora(model, lora_save_path)
             model.train()
             print("save lora weights successfully!")
@@ -120,6 +128,7 @@ def init_distributed_mode():
 
 
 if __name__ == "__main__":
+    # 处理参数
     parser = argparse.ArgumentParser(description="MiniMind SFT with LoRA")
     parser.add_argument("--out_dir", type=str, default="../out")
     parser.add_argument("--epochs", type=int, default=10)
@@ -144,7 +153,10 @@ if __name__ == "__main__":
     parser.add_argument("--data_path", type=str, default="../dataset/lora_medical.jsonl")
     parser.add_argument("--lora_name", type=str, default="lora_medical", help="根据任务保存成lora_(英文/医学/心理...)")
     args = parser.parse_args()
-    
+
+    if torch.cuda.is_available():
+         print("当前使用GPU训练") 
+    # 配置
     lm_config = MiniMindConfig(hidden_size=args.hidden_size, num_hidden_layers=args.num_hidden_layers,
                                use_moe=args.use_moe)
     args.save_dir = os.path.join(args.out_dir)
@@ -160,6 +172,7 @@ if __name__ == "__main__":
     torch.manual_seed(base_seed)
     torch.cuda.manual_seed(base_seed)
 
+    # 若分布式训练
     if ddp:
         init_distributed_mode()
         args.device = torch.device(DEVICE)
@@ -186,6 +199,7 @@ if __name__ == "__main__":
         print(f"LoRA 参数量: {lora_params_count}")
         print(f"LoRA 参数占比: {lora_params_count / total_params * 100:.2f}%")
 
+    # 冻结非LoRA参数
     for name, param in model.named_parameters():
         if 'lora' not in name:
             param.requires_grad = False
