@@ -6,7 +6,6 @@ import torch
 import numpy as np
 import streamlit as st
 
-
 st.set_page_config(page_title="MiniMind", initial_sidebar_state="collapsed")
 
 st.markdown("""
@@ -108,7 +107,7 @@ def load_model_tokenizer(model_path):
     )
     model = model.eval().to(device)
     return model, tokenizer
-  
+
 def clear_chat_messages():
     del st.session_state.messages
     del st.session_state.chat_messages
