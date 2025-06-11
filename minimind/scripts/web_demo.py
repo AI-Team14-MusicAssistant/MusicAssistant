@@ -5,6 +5,7 @@ import os
 import sys
 # 将minimind目录添加到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 import torch
 import numpy as np
@@ -100,25 +101,31 @@ def process_assistant_content(content):
     return content
 
 
-@st.cache_resource
+@st.cache_resource(ttl=None)  # 在此处添加ttl参数
 def load_model_tokenizer(model_path, lora_path=None):
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         trust_remote_code=True
-    )
+    ).to(device)  # 先移至设备
     tokenizer = AutoTokenizer.from_pretrained(
         model_path,
         trust_remote_code=True
     )
-    model = model.eval().to(device)
+    # model = model.eval().to(device)
     # return model, tokenizer
 
     # 加载 LoRA 权重
     if lora_path and os.path.exists(lora_path):
-        apply_lora(model)
-        load_lora(model, lora_path)
-        st.sidebar.success(f"LoRA weights loaded from {lora_path}")
-    
+        try:
+            apply_lora(model)
+            load_lora(model, lora_path)
+            st.sidebar.success("✅ LoRA加载成功！")
+        except Exception as e:
+            st.sidebar.error(f"LoRA加载失败: {str(e)}")
+            st.sidebar.warning("使用基座模型继续")
+    else:
+        st.sidebar.warning("基座模型加载成功")
+        
     model = model.eval().to(device)
     return model, tokenizer
 
@@ -182,24 +189,22 @@ if model_source == "API":
     slogan = f"Hi, I'm {api_model_name}"
 else:
     MODEL_PATHS = {
-        "MiniMind2-R1 (0.1B)": ["../MiniMind2-R1", "MiniMind2-R1"],
-        "MiniMind2-Small-R1 (0.02B)": ["../MiniMind2-Small-R1", "MiniMind2-Small-R1"],
-        "MiniMind2 (0.1B)": ["../MiniMind2", "MiniMind2"],
-        "MiniMind2-MoE (0.15B)": ["../MiniMind2-MoE", "MiniMind2-MoE"],
-        "MiniMind2-Small (0.02B)": ["../MiniMind2-Small", "MiniMind2-Small"]
+        "MiniMind2-Small (0.02B) + LoRA": ["../MiniMind2-Small", "MiniMind2-Small"]
     }
 
-    selected_model = st.sidebar.selectbox('Models', list(MODEL_PATHS.keys()), index=4)  # 原本默认为2，现改为4
+    selected_model = st.sidebar.selectbox('Models', list(MODEL_PATHS.keys()), index=0)  
     model_path = MODEL_PATHS[selected_model][0]
     
-    # 添加 LoRA 选项
-    use_lora = st.sidebar.checkbox("Use LoRA weights", value=False)
+    # 默认使用lora
+    use_lora = st.sidebar.checkbox("Use LoRA weights", value=True)
     if use_lora:
-        lora_path = "minimind/out/lora/lora_music3_512.pth"
-        st.sidebar.info(f"Using LoRA: {lora_path}")
+        lora_path = os.path.join(ROOT_DIR, "out", "lora", "lora_music3_512.pth")
+        st.sidebar.info(f"勾选使用LoRA模型")
     else:
         lora_path = None
-    
+        st.sidebar.warning("未勾选使用loRA模型")
+
+    st.cache_resource.clear() # 清除缓存以确保模型重新加载
     slogan = f"Hi, I'm {MODEL_PATHS[selected_model][1]}"
 
 image_url = "https://www.modelscope.cn/api/v1/studio/gongjy/MiniMind/repo?Revision=master&FilePath=images%2Flogo2.png&View=true"
@@ -229,8 +234,12 @@ def setup_seed(seed):
 def main():
     if model_source == "本地模型":
         # model, tokenizer = load_model_tokenizer(model_path) # 为了使用lora权重，修改为下一行
-        model, tokenizer = load_model_tokenizer(model_path, lora_path if 'lora_path' in locals() else None)
-    
+        model, tokenizer = load_model_tokenizer(
+            model_path, 
+            lora_path if use_lora else None
+        )
+        if not use_lora:
+            st.sidebar.warning("⚠️ 当前使用基座模型")
     else:
         model, tokenizer = None, None
 
@@ -348,5 +357,9 @@ def main():
 
 if __name__ == "__main__":
     from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
-
+    # 检查LoRA文件是否存在
+    default_lora_path = os.path.join(ROOT_DIR, "out", "lora", "lora_music3_512.pth")
+    if not os.path.exists(default_lora_path):
+        st.error(f"⚠️ LoRA权重文件不存在: {default_lora_path}")
+        st.info("请确保LoRA权重文件位于正确路径")
     main()
