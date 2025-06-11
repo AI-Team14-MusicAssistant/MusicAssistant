@@ -1,10 +1,15 @@
 import random
 import re
 from threading import Thread
+import os
+import sys
+# 将minimind目录添加到Python路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import torch
 import numpy as np
 import streamlit as st
+from model.model_lora import apply_lora, load_lora  # 添加这一行
 
 st.set_page_config(page_title="MiniMind", initial_sidebar_state="collapsed")
 
@@ -96,7 +101,7 @@ def process_assistant_content(content):
 
 
 @st.cache_resource
-def load_model_tokenizer(model_path):
+def load_model_tokenizer(model_path, lora_path=None):
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         trust_remote_code=True
@@ -105,6 +110,15 @@ def load_model_tokenizer(model_path):
         model_path,
         trust_remote_code=True
     )
+    model = model.eval().to(device)
+    # return model, tokenizer
+
+    # 加载 LoRA 权重
+    if lora_path and os.path.exists(lora_path):
+        apply_lora(model)
+        load_lora(model, lora_path)
+        st.sidebar.success(f"LoRA weights loaded from {lora_path}")
+    
     model = model.eval().to(device)
     return model, tokenizer
 
@@ -177,6 +191,15 @@ else:
 
     selected_model = st.sidebar.selectbox('Models', list(MODEL_PATHS.keys()), index=4)  # 原本默认为2，现改为4
     model_path = MODEL_PATHS[selected_model][0]
+    
+    # 添加 LoRA 选项
+    use_lora = st.sidebar.checkbox("Use LoRA weights", value=False)
+    if use_lora:
+        lora_path = "minimind/out/lora/lora_music3_512.pth"
+        st.sidebar.info(f"Using LoRA: {lora_path}")
+    else:
+        lora_path = None
+    
     slogan = f"Hi, I'm {MODEL_PATHS[selected_model][1]}"
 
 image_url = "https://www.modelscope.cn/api/v1/studio/gongjy/MiniMind/repo?Revision=master&FilePath=images%2Flogo2.png&View=true"
@@ -205,7 +228,9 @@ def setup_seed(seed):
 
 def main():
     if model_source == "本地模型":
-        model, tokenizer = load_model_tokenizer(model_path)
+        # model, tokenizer = load_model_tokenizer(model_path) # 为了使用lora权重，修改为下一行
+        model, tokenizer = load_model_tokenizer(model_path, lora_path if 'lora_path' in locals() else None)
+    
     else:
         model, tokenizer = None, None
 
