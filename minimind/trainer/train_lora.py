@@ -131,12 +131,12 @@ if __name__ == "__main__":
     # 处理参数
     parser = argparse.ArgumentParser(description="MiniMind SFT with LoRA")
     parser.add_argument("--out_dir", type=str, default="../out")
-    parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--epochs", type=int, default=10) 
+    parser.add_argument("--batch_size", type=int, default=32) 
     parser.add_argument("--learning_rate", type=float, default=1e-4)
     parser.add_argument("--device", type=str, default="cuda:0" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--dtype", type=str, default="bfloat16")
-    parser.add_argument("--use_wandb", action="store_true")
+    parser.add_argument("--use_wandb", action="store_true")  # 是否记录训练过程
     parser.add_argument("--wandb_project", type=str, default="MiniMind-LoRA-SFT")
     parser.add_argument("--num_workers", type=int, default=1)
     parser.add_argument("--ddp", action="store_true")
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     parser.add_argument("--grad_clip", type=float, default=1.0)
     parser.add_argument("--warmup_iters", type=int, default=0)
     parser.add_argument("--log_interval", type=int, default=100)
-    parser.add_argument("--save_interval", type=int, default=20) # 更改保存轮数，原为100
+    parser.add_argument("--save_interval", type=int, default=100) # 多少轮保存一次
     parser.add_argument('--local_rank', type=int, default=-1)
     parser.add_argument('--hidden_size', default=512, type=int)
     parser.add_argument('--num_hidden_layers', default=8, type=int)
@@ -155,7 +155,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if torch.cuda.is_available():
-         print("当前使用GPU训练") 
+        print("当前使用GPU训练") 
+    else:
+        print("使用CPU训练")
     # 配置
     lm_config = MiniMindConfig(hidden_size=args.hidden_size, num_hidden_layers=args.num_hidden_layers,
                                use_moe=args.use_moe)

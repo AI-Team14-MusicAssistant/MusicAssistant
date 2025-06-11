@@ -50,30 +50,43 @@
 
 \section{实验目的}
 
-在此填写实验目的...
+从实践中学习收集数据、处理数据集的方法；学习LoRA微调的原理，动手实践LoRA微调。
 
 \section{实验原理}
-简述实验涉及的理论基础和算法原理...
+LoRA微调的原理
 
-% 数学公式示例
+% lora微调公式
 \begin{equation}
     f(x) = \sum_{i=1}^{n} w_i x_i + b
 \end{equation}
 
 \section{实验环境}
 \begin{itemize}
-    \item \textbf{操作系统：} [如 Windows 11 / Ubuntu 20.04]
-    \item \textbf{编程语言：} [如 Python 3.9]
-    \item \textbf{主要库：} [如 TensorFlow, PyTorch, Scikit-learn]
-    \item \textbf{开发环境：} [如 Jupyter Notebook, PyCharm]
+    \item \textbf{操作系统：} Windows 11 
+    \item \textbf{编程语言：} Python 3.10.16
+    \item \textbf{主要库：} TensorFlow, PyTorch
+    \item \textbf{开发环境：} VScode
 \end{itemize}
 
 \section{实验内容与步骤}
 \subsection{数据预处理}
-描述数据集的来源、特征和预处理步骤...
+来自开源数据集。URL: https://github.com/thu-coai/KdConv.git
 
 \subsection{模型构建}
-详细说明模型的结构和参数设置...
+模型使用26M的MiniMind2-small的基座模型和训练出的LoRA权重
+
+LoRA微调的参数：
+epoch = 10
+batch_size = 32
+learning_rate = 0.0001
+accumulation_steps = 1
+grad_clip = 1
+warmup_iters = 0
+hidden_size = 512
+num_hidden_layers = 8
+max_seq_len = 512
+use_moe = False
+
 
 % 代码块示例
 \begin{lstlisting}[language=Python, caption=示例代码]
@@ -85,7 +98,22 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 \end{lstlisting}
 
 \subsection{训练过程}
-说明训练参数、优化器选择和训练过程...
+(说明训练参数、优化器选择和训练过程...)
+LoRA微调的参数：
+epoch = 10
+batch_size = 32
+learning_rate = 0.0001
+accumulation_steps = 1
+grad_clip = 1
+warmup_iters = 0
+hidden_size = 512
+num_hidden_layers = 8
+max_seq_len = 512
+use_moe = False
+
+（优化器选择？？？）
+
+训练过程：待从 记录.md 插入
 
 \section{实验结果}
 \subsection{性能指标}
