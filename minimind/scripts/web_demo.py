@@ -197,9 +197,23 @@ else:
     
     # 默认使用lora
     use_lora = st.sidebar.checkbox("Use LoRA weights", value=True)
+
     if use_lora:
-        lora_path = os.path.join(ROOT_DIR, "out", "lora", "lora_music3_512.pth")
-        st.sidebar.info(f"勾选使用LoRA模型")
+        # 获取lora目录下所有的.pth文件
+        lora_dir = os.path.join(ROOT_DIR, "out", "lora")
+        lora_files = [f for f in os.listdir(lora_dir) if f.endswith('.pth')]
+        
+        if lora_files:
+            selected_lora = st.sidebar.selectbox(
+                "Select LoRA weights", 
+                lora_files,
+                index=0
+            )
+            lora_path = os.path.join(lora_dir, selected_lora)
+            st.sidebar.info(f"已选择LoRA权重: {selected_lora}")
+        else:
+            lora_path = None
+            st.sidebar.error("未找到任何LoRA权重文件")
     else:
         lora_path = None
         st.sidebar.warning("未勾选使用loRA模型")
