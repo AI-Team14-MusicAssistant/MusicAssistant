@@ -35,8 +35,8 @@ if __name__ == "__main__":
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
     # 设置输入输出文件的完整路径
-    input_file = os.path.join(current_dir, "music_data3.jsonl")
-    output_file = os.path.join(current_dir, "music_data3_shuffled.jsonl")
+    input_file = os.path.join(current_dir, "music_data5.jsonl")
+    output_file = os.path.join(current_dir, "music_data5_shuffled.jsonl")
     
     # 可以设置随机种子以确保结果可复现（可选）
     # random.seed(42)
