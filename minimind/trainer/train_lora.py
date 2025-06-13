@@ -219,7 +219,7 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         pin_memory=True,
         drop_last=False,
-        shuffle=False,
+        shuffle=True,    # 此处应该打乱
         num_workers=args.num_workers,
         sampler=train_sampler
     )
